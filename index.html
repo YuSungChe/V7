@@ -416,7 +416,14 @@ function bayesUpdate(key, correct){
 }
 
 function loadAll(){
-  try{const h=localStorage.getItem(SK);if(h)history=JSON.parse(h);}catch(e){}
+  try{const h=localStorage.getItem(SK);if(h)history=JSON.parse(h);}catch(e){history=[];}
+  
+  // 新增：永久累積所有歷史（供 AI 長期參考）
+  try{
+    const fh = localStorage.getItem('b7_fullHistory');
+    if(fh) fullHistory = JSON.parse(fh);
+  } catch(e){ fullHistory = []; }
+  
   try{const w=localStorage.getItem(WK);if(w)BW=JSON.parse(w);}catch(e){}
   try{const p=localStorage.getItem(PLK);if(p)predLog=JSON.parse(p);}catch(e){}
 }
@@ -684,9 +691,37 @@ function showPrediction(){
 }
 
 function updateAll(){updateStats();updateHistory();drawRoad();showPrediction();}
-function addHand(w){if(w!=='T')learn(w);history.push({winner:w});saveH();updateAll();}
+function addHand(w){
+  if(w!=='T') learn(w);
+  
+  history.push({winner:w});
+  
+  // 永久累積到 fullHistory（AI 模型會參考全部歷史）
+  if(!window.fullHistory) window.fullHistory = [];
+  window.fullHistory.push({winner:w, time:new Date().toISOString()});
+  localStorage.setItem('b7_fullHistory', JSON.stringify(window.fullHistory));
+  
+  saveH(); 
+  updateAll();
+}
 function undoLast(){if(!history.length)return;history.pop();if(predLog.length&&predLog[predLog.length-1].actual===null)predLog.pop();saveH();saveP();updateAll();}
-function clearAll(){openModal('confirmOverlay');}
+function clearAll(){
+  if(!confirm('確定清除目前畫面上的路單嗎？\n\n（所有歷史資料會永久保留，供 AI 模型長期參考）')){
+    return;
+  }
+  
+  // 只清除目前畫面，不影響永久歷史
+  history = [];
+  saveH();
+  updateAll();
+  
+  // 提示訊息
+  const notice = document.createElement('div');
+  notice.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:12px 24px;border-radius:8px;font-size:0.9rem;z-index:9999;';
+  notice.textContent = '畫面已清除，所有歷史資料已永久保留';
+  document.body.appendChild(notice);
+  setTimeout(() => notice.remove(), 2800);
+}
 
 function doUnlock(){
   document.getElementById('lockOverlay').style.display='none';
@@ -899,6 +934,12 @@ document.addEventListener('DOMContentLoaded',function(){
   loadAll();
 });
 </script>
-
+<script>
+// 後台 IP 訪客記錄
+fetch('/api/visit')
+  .then(r => r.json())
+  .then(data => console.log('訪客記錄成功', data))
+  .catch(err => console.log('訪客記錄失敗', err));
+</script>
 </body>
 </html>
