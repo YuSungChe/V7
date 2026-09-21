@@ -116,11 +116,29 @@ border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:point
 .hn{background:rgba(239,68,68,.14);color:#f87171 !important;}
 
 /* 貝葉斯信心度（含數字%） */
-#bayesBar{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
-.bayes-label{font-size:.65rem;color:var(--muted) !important;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
-#bayesPct{font-size:.85rem;font-weight:800;color:#a78bfa !important;}
-.bayes-track{background:#0d1526;border-radius:4px;height:6px;overflow:hidden;border:1px solid var(--border);}
-.bayes-fill{height:100%;border-radius:4px;transition:width .5s;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+#bayesBar{
+  margin-top: 16px;          /* 原本較小，現在加大距離往下移 */
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.bayes-label{
+  font-size: .65rem;
+  color: var(--muted) !important;
+  margin-bottom: 6px;
+}
+.bayes-track{
+  background: #0d1526;
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.bayes-fill{
+  height: 100%;
+  border-radius: 4px;
+  transition: width .5s;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+}
 
 .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;z-index:9000;}
 #lockOverlay{background:var(--bg);z-index:9999;flex-direction:column;gap:14px;text-align:center;padding:30px;}
@@ -306,10 +324,11 @@ color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;
           <span class="risk-pill" id="riskPill"></span>
           <!-- 貝葉斯信心度（含數字%） -->
           <div id="bayesBar">
-            <div class="bayes-label">
-              <span>貝葉斯信心度</span>
-              <span id="bayesPct">50.0%</span>
-            </div>
+  <div class="bayes-label">貝葉斯信心度</div>
+  <div class="bayes-track">
+    <div class="bayes-fill" id="bayesFill" style="width:50%"></div>
+  </div>
+</div>
             <div class="bayes-track">
               <div class="bayes-fill" id="bayesFill" style="width:50%"></div>
             </div>
@@ -616,8 +635,6 @@ function showPrediction(){
   
   // ★ 更新貝葉斯信心度數字與進度條
   document.getElementById('bayesFill').style.width = bayesConf + '%';
-if(document.getElementById('bayesPct')) document.getElementById('bayesPct').textContent = bayesConf.toFixed(1) + '%';
-// 紅色框框位置的大數字
 const bigEl = document.getElementById('bayesConfBig');
 if(bigEl) bigEl.textContent = bayesConf.toFixed(1) + '%';
 
