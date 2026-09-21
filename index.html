@@ -121,7 +121,7 @@ border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:point
 
 /* 貝葉斯信心度（含數字%） */
 #bayesBar{
-  margin-top: 16px;          /* 原本較小，現在加大距離往下移 */
+  margin-top: 16px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
@@ -327,7 +327,8 @@ color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;
           </div>
           <span class="risk-pill" id="riskPill"></span>
           <!-- 貝葉斯信心度（含數字%） -->
-          <div id="bayesBar">
+          <!-- 貝葉斯信心度（只保留一條進度條） -->
+<div id="bayesBar">
   <div class="bayes-label">貝葉斯信心度</div>
   <div class="bayes-track">
     <div class="bayes-fill" id="bayesFill" style="width:50%"></div>
