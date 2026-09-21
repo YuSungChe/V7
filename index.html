@@ -280,9 +280,18 @@ color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;
       </div>
       <div id="resultBox">
         <div id="predBig">
-          <div id="predLabel">—</div>
-          <div id="predSub">PREDICTION</div>
-        </div>
+  <div id="predLabel">—</div>
+  <div id="predSub">PREDICTION</div>
+  <!-- 紅色框框位置的信心度數字 -->
+  <div id="bayesConfBig" style="
+    margin-top: 10px;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #a78bfa;
+    text-align: center;
+    letter-spacing: 1px;
+  ">--%</div>
+</div>
         <div id="predMid">
           <div class="prob-line">
             <span class="prob-side" style="color:var(--red)">莊</span>
@@ -606,8 +615,11 @@ function showPrediction(){
   document.getElementById('pctP').textContent=pP.toFixed(1)+'%';
   
   // ★ 更新貝葉斯信心度數字與進度條
-  document.getElementById('bayesFill').style.width=bayesConf+'%';
-  document.getElementById('bayesPct').textContent=bayesConf.toFixed(1)+'%';
+  document.getElementById('bayesFill').style.width = bayesConf + '%';
+if(document.getElementById('bayesPct')) document.getElementById('bayesPct').textContent = bayesConf.toFixed(1) + '%';
+// 紅色框框位置的大數字
+const bigEl = document.getElementById('bayesConfBig');
+if(bigEl) bigEl.textContent = bayesConf.toFixed(1) + '%';
 
   const rp=document.getElementById('riskPill');
   if(conf<54){rp.className='risk-pill rh';rp.textContent='⚠ 高風險・停手';}
