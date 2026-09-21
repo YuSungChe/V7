@@ -87,7 +87,11 @@ border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:point
 #waitBox .wt{font-size:.9rem;color:var(--muted) !important;margin-bottom:12px;}
 .prog-track{background:#0d1526;border:1px solid var(--border);border-radius:5px;height:8px;overflow:hidden;}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:5px;transition:width .3s;}
-#resultBox{display:none;align-items:center;gap:14px;}
+#resultBox{
+  display: none;          /* 預設隱藏 */
+  align-items: center;
+  gap: 14px;
+}
 #predBig{flex:0 0 auto;text-align:center;min-width:80px;}
 #predLabel{font-size:1.7rem;font-weight:900;line-height:1;animation:pop .35s ease;}
 @keyframes pop{0%{transform:scale(.7);opacity:0;}65%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
@@ -591,13 +595,24 @@ function drawRoad(){
 }
 
 function showPrediction(){
-  const wb=document.getElementById('waitBox'),rb=document.getElementById('resultBox');
-  if(history.length<20){
-    wb.style.display='block';rb.style.display='none';
-    document.getElementById('waitNum').textContent=history.length;
-    document.getElementById('progFill').style.width=(history.length/20*100)+'%';
-    document.getElementById('hdrCount').textContent='';document.getElementById('hdrStreak').textContent='';return;
+  const wb = document.getElementById('waitBox');
+  const rb = document.getElementById('resultBox');
+
+  if(history.length < 20){
+    wb.style.display = 'block';
+    rb.style.display = 'none';          // 強制隱藏整個結果區塊（包含右側命中率）
+    document.getElementById('waitNum').textContent = history.length;
+    document.getElementById('progFill').style.width = (history.length / 20 * 100) + '%';
+    document.getElementById('hdrCount').textContent = '';
+    document.getElementById('hdrStreak').textContent = '';
+    return;
   }
+
+  // 資料足夠，顯示預測結果
+  wb.style.display = 'none';
+  rb.style.display = 'flex';           // 顯示整個結果區塊
+
+  // ... 後面原本的預測計算程式碼保持不變 ...
   wb.style.display='none';rb.style.display='flex';
 
   const results=MODELS.map(m=>m.fn());
