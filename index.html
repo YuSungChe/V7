@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=390, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>百家樂趨勢分析 V7</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="百家樂AI">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="color-scheme" content="only light">
+  <style>
+  :root{
+    --bg:#0a0e1a;--card:#111827;--card2:#1a2235;
+    --border:#1e2d45;--gold:#f5c518;--gold2:#c9960c;
+    --red:#e03030;--blue:#2b72e8;--green:#18a84a;
+    --text:#dde4f0;--muted:#5a6a85;--r:12px;
+    color-scheme:only light;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
+  html{background:#0a0e1a !important;}
+  body{background:#0a0e1a !important;color:#dde4f0 !important;
+    font-family:-apple-system,'Helvetica Neue','PingFang TC','Microsoft JhengHei',sans-serif;
+    font-size:16px;min-height:100vh;}
+
+/* 頂部 */
+#topbar{background:linear-gradient(90deg,#0d1526,#16243e,#0d1526);
+border-bottom:1px solid var(–border);display:flex;align-items:center;
+justify-content:space-between;padding:12px 16px;gap:8px;
+position:sticky;top:0;z-index:10;}
+.title{font-size:1.1rem;font-weight:800;color:var(–gold) !important;letter-spacing:1px;white-space:nowrap;}
+.ver{font-size:.62rem;color:var(–muted) !important;letter-spacing:2px;}
+#topRight{display:flex;align-items:center;gap:6px;}
+#netBadge{font-size:.65rem;padding:3px 9px;border-radius:20px;
+background:#16a34a18;border:1px solid #16a34a55;color:#4ade80 !important;white-space:nowrap;}
+#timerBar{display:none;align-items:center;gap:4px;background:#1a2235;
+border:1px solid #f5c51844;border-radius:8px;padding:4px 9px;
+font-size:.68rem;color:var(–gold) !important;white-space:nowrap;}
+#timerBar.warn{border-color:#f59e0b88;color:#fbbf24 !important;}
+#timerBar.danger{border-color:#ef444488;color:#f87171 !important;}
+#timerTxt{font-weight:700;}
+
+/* 主內容 */
+#wrap{padding:12px 14px;display:flex;flex-direction:column;gap:12px;background:#0a0e1a !important;}
+#row1{display:flex;gap:12px;}
+
+/* 左欄 */
+#colLeft{flex:0 0 auto;width:140px;display:flex;flex-direction:column;gap:8px;}
+.bet-btn{border:none;border-radius:12px;font-size:1.4rem;font-weight:900;
+letter-spacing:2px;cursor:pointer;padding:15px 0;color:white !important;
+transition:transform .1s,opacity .1s;width:100%;}
+.bet-btn:active{transform:scale(.93);opacity:.85;}
+.btn-b{background:linear-gradient(135deg,#b02020,#e03030);box-shadow:0 3px 10px rgba(224,48,48,.4);}
+.btn-p{background:linear-gradient(135deg,#1858c8,#2b72e8);box-shadow:0 3px 10px rgba(43,114,232,.4);}
+.btn-t{background:linear-gradient(135deg,#0f8a38,#18a84a);box-shadow:0 3px 10px rgba(24,168,74,.3);}
+.util-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.util-btn{border:none;border-radius:9px;font-size:.72rem;font-weight:700;
+padding:9px 4px;cursor:pointer;transition:transform .1s;letter-spacing:.5px;}
+.util-btn:active{transform:scale(.93);}
+#btnUndo{background:#1e2d45;color:#7a9cc8 !important;}
+#btnClear{background:#1e1408;color:#d97706 !important;border:1px solid #7c3a0033;}
+#btnHistory{background:#0f2a1a;color:#4ade80 !important;border:1px solid #16a34a44;}
+#btnExport{background:#1a1a0a;color:#facc15 !important;border:1px solid #ca8a0444;}
+#statsRow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.stat-mini{background:#0d1526;border:1px solid var(–border);
+border-radius:9px;text-align:center;padding:7px 2px;}
+.stat-mini .sv{font-size:1.05rem;font-weight:900;}
+.stat-mini .sk{font-size:.58rem;color:var(–muted) !important;}
+
+/* 右欄 */
+#colRight{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:9px;}
+#historyBox{background:#0d1526;border:1px solid var(–border);border-radius:var(–r);
+padding:9px 12px;height:90px;overflow-y:auto;
+font-size:.82rem;line-height:1.7;color:var(–muted) !important;
+font-family:‘Courier New’,monospace;}
+#historyBox::-webkit-scrollbar{width:3px;}
+#historyBox::-webkit-scrollbar-thumb{background:var(–border);border-radius:2px;}
+#roadWrap{background:#0d1526;border:1px solid var(–border);border-radius:var(–r);overflow:hidden;}
+#roadCanvas{display:block;width:100%;height:185px;}
+
+/* 預測區 */
+#predCard{background:var(–card);border:1px solid var(–border);border-radius:var(–r);overflow:hidden;}
+#predHeader{display:flex;align-items:center;justify-content:space-between;
+padding:10px 16px;background:#0d1526;border-bottom:1px solid var(–border);}
+#predHeader span{font-size:.75rem;font-weight:700;color:var(–muted) !important;
+letter-spacing:2px;text-transform:uppercase;}
+#predHeaderRight{display:flex;gap:6px;align-items:center;}
+#reverseBtn{background:#1e2d45;color:#7a9cc8 !important;border:1px solid #2a3d5a;
+border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:pointer;}
+#predBody{padding:14px 16px;}
+#waitBox{text-align:center;padding:24px 0;}
+#waitBox .wt{font-size:.9rem;color:var(–muted) !important;margin-bottom:12px;}
+.prog-track{background:#0d1526;border:1px solid var(–border);border-radius:5px;height:8px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(–gold2),var(–gold));border-radius:5px;transition:width .3s;}
+#resultBox{display:none;align-items:center;gap:14px;}
+#predBig{flex:0 0 auto;text-align:center;min-width:80px;}
+#predLabel{font-size:1.7rem;font-weight:900;line-height:1;animation:pop .35s ease;}
+@keyframes pop{0%{transform:scale(.7);opacity:0;}65%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+#predLabel.bk{color:var(–red) !important;}
+#predLabel.pl{color:var(–blue) !important;}
+#predSub{font-size:.62rem;color:var(–muted) !important;margin-top:3px;letter-spacing:1px;}
+#predMid{flex:1 1 0;display:flex;flex-direction:column;gap:8px;min-width:0;}
+.prob-line{display:flex;align-items:center;gap:7px;}
+.prob-side{font-size:.72rem;color:var(–muted) !important;width:20px;text-align:center;}
+.prob-track2{flex:1;background:#0d1526;border-radius:5px;height:10px;overflow:hidden;border:1px solid var(–border);}
+.prob-fill2{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.pb{background:linear-gradient(90deg,#b02020,#e03030);}
+.pp{background:linear-gradient(90deg,#1858c8,#2b72e8);}
+.prob-pct{font-size:.7rem;font-weight:700;width:36px;text-align:right;}
+.risk-pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.65rem;font-weight:700;align-self:flex-start;}
+.rh{background:rgba(239,68,68,.12);color:#f87171 !important;border:1px solid rgba(239,68,68,.3);}
+.rm{background:rgba(251,191,36,.1);color:#fbbf24 !important;border:1px solid rgba(251,191,36,.3);}
+.rl{background:rgba(34,197,94,.1);color:#4ade80 !important;border:1px solid rgba(34,197,94,.3);}
+#predRight{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:62px;}
+.pr-stat{text-align:right;}
+.pr-val{font-size:1.15rem;font-weight:900;color:var(–gold) !important;}
+.pr-key{font-size:.58rem;color:var(–muted) !important;}
+#hitRow{display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end;margin-top:2px;}
+.hdot{width:17px;height:17px;border-radius:50%;font-size:.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.hy{background:rgba(34,197,94,.18);color:#4ade80 !important;}
+.hn{background:rgba(239,68,68,.14);color:#f87171 !important;}
+
+/* 貝葉斯信心指標 */
+#bayesBar{margin-top:8px;padding-top:8px;border-top:1px solid var(–border);}
+.bayes-label{font-size:.65rem;color:var(–muted) !important;margin-bottom:4px;}
+.bayes-track{background:#0d1526;border-radius:4px;height:6px;overflow:hidden;border:1px solid var(–border);}
+.bayes-fill{height:100%;border-radius:4px;transition:width .5s;}
+
+/* 疊層共用 */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;z-index:9000;}
+
+/* 解鎖 */
+#lockOverlay{background:var(–bg);z-index:9999;flex-direction:column;gap:14px;text-align:center;padding:30px;}
+.lk-icon{font-size:2.8rem;}
+#lockOverlay h2{font-size:1.25rem;color:var(–gold) !important;font-weight:800;}
+#lockDesc{font-size:.85rem;color:#aab4c8 !important;}
+#unlockBtn{background:linear-gradient(135deg,var(–gold2),var(–gold));color:#0a0e1a !important;
+border:none;padding:15px 44px;border-radius:12px;font-size:1.1rem;font-weight:900;cursor:pointer;}
+#unlockBtn:active{opacity:.85;}
+#pwArea{display:none;flex-direction:column;align-items:center;gap:10px;width:100%;}
+#pwInput{width:240px;padding:14px;background:#0d1526;border:2px solid var(–gold2);
+border-radius:10px;color:white !important;font-size:1.15rem;text-align:center;letter-spacing:6px;outline:none;}
+#pwInput:focus{border-color:var(–gold);}
+#pwOkBtn{background:#16a34a;color:white !important;border:none;padding:13px 36px;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;}
+#pwOkBtn:active{opacity:.85;}
+#pwErr{color:#f87171 !important;font-size:.85rem;min-height:1.2rem;text-align:center;}
+
+/* 確認清空 */
+#confirmOverlay{background:rgba(0,0,0,.88);}
+#confirmBox{background:var(–card2);border:1px solid var(–border);border-radius:16px;padding:26px 22px;text-align:center;max-width:290px;width:100%;}
+#confirmBox h3{font-size:1.05rem;color:var(–gold) !important;margin-bottom:10px;}
+#confirmBox p{font-size:.85rem;color:var(–muted) !important;margin-bottom:22px;line-height:1.6;}
+#confirmBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#confirmNo{background:#1e2d45;color:#94a3b8 !important;border:none;border-radius:9px;padding:12px;font-size:.88rem;font-weight:700;cursor:pointer;}
+#confirmYes{background:linear-gradient(135deg,#b02020,#e03030);color:white !important;border:none;border-radius:9px;padding:12px;font-size:.88rem;font-weight:700;cursor:pointer;}
+
+/* 歷史視窗 */
+#historyOverlay{background:rgba(0,0,0,.9);align-items:flex-start;overflow-y:auto;}
+.modal-box{background:#111827;border:1px solid #1e2d45;border-radius:14px;width:100%;max-width:500px;margin:auto;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+background:#0d1526;border-bottom:1px solid #1e2d45;border-radius:14px 14px 0 0;}
+.modal-hdr span{color:#f5c518 !important;font-weight:800;font-size:.95rem;}
+.modal-close{background:none;border:none;color:#7a8aaa !important;font-size:1.3rem;cursor:pointer;}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px 14px;border-bottom:1px solid #1e2d45;}
+.ms-box{background:#0d1526;border:1px solid #1e2d45;border-radius:8px;text-align:center;padding:8px 4px;}
+.ms-val{font-size:1.05rem;font-weight:900;}
+.ms-key{font-size:.55rem;color:#5a6a85 !important;margin-top:2px;}
+.modal-actions{padding:8px 14px;border-bottom:1px solid #1e2d45;display:flex;gap:8px;flex-wrap:wrap;}
+.act-btn{border:none;border-radius:7px;padding:7px 14px;font-size:.75rem;font-weight:700;cursor:pointer;}
+.modal-list{padding:12px 14px;max-height:55vh;overflow-y:auto;font-family:‘Courier New’,monospace;font-size:.82rem;line-height:1.9;}
+
+/* 導入視窗 */
+#importOverlay{background:rgba(0,0,0,.9);}
+#importBox{background:#111827;border:1px solid #1e2d45;border-radius:14px;padding:24px;max-width:380px;width:100%;}
+#importBox h3{color:#f5c518 !important;font-size:1rem;margin-bottom:8px;}
+#importBox p{color:#5a6a85 !important;font-size:.82rem;margin-bottom:14px;line-height:1.6;}
+#importTextarea{width:100%;height:120px;background:#0d1526;border:1px solid #1e2d45;border-radius:8px;
+color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;font-family:monospace;}
+#importTextarea:focus{border-color:var(–gold);}
+.import-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+</style>
+
+</head>
+<body>
+
+<!-- 解鎖疊層 -->
+
+<div id="lockOverlay" class="overlay" style="display:flex;flex-direction:column;">
+  <div class="lk-icon">🔐</div>
+  <h2>百家樂趨勢分析 V7</h2>
+  <p id="lockDesc">請輸入密碼以解鎖使用</p>
+  <button id="unlockBtn">🔓 輸入密碼解鎖</button>
+  <div id="pwArea">
+    <input id="pwInput" type="password" placeholder="輸入密碼" maxlength="20" autocomplete="off">
+    <button id="pwOkBtn">✅ 確認</button>
+    <div id="pwErr"></div>
+  </div>
+</div>
+
+<!-- 確認清空 -->
+
+<div id="confirmOverlay" class="overlay">
+  <div id="confirmBox">
+    <h3>⚠️ 確認清空</h3>
+    <p>將清空所有開牌歷史及 AI 學習紀錄，此操作無法復原。</p>
+    <div id="confirmBtns">
+      <button id="confirmNo">取消</button>
+      <button id="confirmYes">確定清空</button>
+    </div>
+  </div>
+</div>
+
+<!-- 歷史記錄視窗 -->
+
+<div id="historyOverlay" class="overlay">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>📋 完整歷史記錄</span>
+      <button class="modal-close" onclick="closeModal('historyOverlay')">✕</button>
+    </div>
+    <div class="modal-stats" id="histModalStats"></div>
+    <div class="modal-actions">
+      <button class="act-btn" onclick="exportText()" style="background:#1a1a0a;color:#facc15 !important;">💾 複製文字</button>
+      <button class="act-btn" onclick="exportCSV()" style="background:#0f1a2a;color:#60a5fa !important;">📊 複製CSV</button>
+      <button class="act-btn" onclick="exportJSON()" style="background:#1a0a1a;color:#c084fc !important;">📦 複製JSON</button>
+      <button class="act-btn" onclick="openModal('importOverlay')" style="background:#0a1a0a;color:#4ade80 !important;">📥 導入資料</button>
+    </div>
+    <div class="modal-list" id="histModalList"></div>
+  </div>
+</div>
+
+<!-- 導入資料視窗 -->
+
+<div id="importOverlay" class="overlay">
+  <div id="importBox">
+    <h3>📥 導入歷史資料</h3>
+    <p>貼上之前匯出的 JSON 資料，導入後會合併到現有記錄。</p>
+    <textarea id="importTextarea" placeholder='貼上 JSON 資料，格式：[{"winner":"B"},{"winner":"P"},...]'></textarea>
+    <div class="import-btns">
+      <button class="act-btn" onclick="closeModal('importOverlay')" style="background:#1e2d45;color:#94a3b8 !important;width:100%;">取消</button>
+      <button class="act-btn" onclick="doImport()" style="background:#16a34a;color:white !important;width:100%;">確認導入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 頂部 -->
+
+<div id="topbar">
+  <div>
+    <div class="title">🎴 百家樂趨勢分析</div>
+    <div class="ver">V7 · BAYESIAN AI ENGINE</div>
+  </div>
+  <div id="topRight">
+    <div id="timerBar">⏱ <span id="timerTxt">--:--</span></div>
+    <div id="netBadge">● 載入中</div>
+  </div>
+</div>
+
+<!-- 主內容 -->
+
+<div id="mainWrap" style="display:none;">
+<div id="wrap">
+  <div id="row1">
+    <div id="colLeft">
+      <button id="btnB" class="bet-btn btn-b">莊</button>
+      <button id="btnP" class="bet-btn btn-p">閒</button>
+      <button id="btnT" class="bet-btn btn-t">和</button>
+      <div class="util-row">
+        <button id="btnUndo" class="util-btn">↩刪除</button>
+        <button id="btnClear" class="util-btn">🗑清空</button>
+      </div>
+      <div class="util-row">
+        <button id="btnHistory" class="util-btn" onclick="showHistoryModal()">📋 歷史</button>
+        <button id="btnExport" class="util-btn" onclick="exportText()">💾 匯出</button>
+      </div>
+      <div id="statsRow">
+        <div class="stat-mini"><div class="sv" style="color:var(--red)" id="stB">0</div><div class="sk">莊</div></div>
+        <div class="stat-mini"><div class="sv" style="color:var(--blue)" id="stP">0</div><div class="sk">閒</div></div>
+        <div class="stat-mini"><div class="sv" style="color:var(--green)" id="stT">0</div><div class="sk">和</div></div>
+      </div>
+    </div>
+    <div id="colRight">
+      <div id="historyBox"><span style="color:var(--muted)">尚無記錄</span></div>
+      <div id="roadWrap"><canvas id="roadCanvas"></canvas></div>
+    </div>
+  </div>
+
+  <div id="predCard">
+    <div id="predHeader">
+      <span>🔮 貝葉斯 AI 引擎</span>
+      <div id="predHeaderRight">
+        <span id="hdrStreak" style="font-size:.65rem;color:var(--muted)"></span>
+        <span id="hdrCount" style="font-size:.65rem;color:var(--gold)"></span>
+        <button id="reverseBtn" onclick="toggleReverse()">🔄 正向</button>
+      </div>
+    </div>
+    <div id="predBody">
+      <div id="waitBox">
+        <div class="wt">累積資料中… <span id="waitNum">0</span> / 20 筆</div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+      <div id="resultBox">
+        <div id="predBig">
+          <div id="predLabel">—</div>
+          <div id="predSub">PREDICTION</div>
+        </div>
+        <div id="predMid">
+          <div class="prob-line">
+            <span class="prob-side" style="color:var(--red)">莊</span>
+            <div class="prob-track2"><div class="prob-fill2 pb" id="barB" style="width:50%"></div></div>
+            <span class="prob-pct" id="pctB" style="color:var(--red)">50%</span>
+          </div>
+          <div class="prob-line">
+            <span class="prob-side" style="color:var(--blue)">閒</span>
+            <div class="prob-track2"><div class="prob-fill2 pp" id="barP" style="width:50%"></div></div>
+            <span class="prob-pct" id="pctP" style="color:var(--blue)">50%</span>
+          </div>
+          <span class="risk-pill" id="riskPill"></span>
+          <div id="bayesBar">
+            <div class="bayes-label">貝葉斯信心度</div>
+            <div class="bayes-track"><div class="bayes-fill" id="bayesFill" style="width:50%;background:linear-gradient(90deg,#7c3aed,#a78bfa);"></div></div>
+          </div>
+        </div>
+        <div id="predRight">
+          <div class="pr-stat"><div class="pr-val" id="accVal">--%</div><div class="pr-key">命中率</div></div>
+          <div class="pr-stat"><div class="pr-val" id="hitVal">0</div><div class="pr-key">命中/<span id="totVal">0</span></div></div>
+          <div id="hitRow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /mainWrap -->
+
+<script>
+/* ── SW ── */
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));
+  const c=`const V='b7v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll([location.href])).then(()=>self.skipWaiting()));});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(location.href))));});`;
+  try{
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([c],{type:'application/javascript'})))
+      .then(()=>{const b=document.getElementById('netBadge');b.textContent='● 離線就緒';b.style.color='#4ade80';})
+      .catch(()=>{const b=document.getElementById('netBadge');b.textContent='● 本地模式';b.style.color='#fbbf24';});
+  }catch(e){const b=document.getElementById('netBadge');b.textContent='● 本地模式';b.style.color='#fbbf24';}
+  window.addEventListener('offline',()=>{document.getElementById('netBadge').textContent='● 離線中';});
+  window.addEventListener('online', ()=>{document.getElementById('netBadge').textContent='● 已連線';});
+})();
+
+/* ════════════════════════════════════════
+   密碼 & 限時
+════════════════════════════════════════ */
+const P1='17881788',P2='59875987';
+const P3='12341234',P3_MS=15*60*1000,   P3_EK='b7t3e',P3_UK='b7t3u';
+const P4='43214321',P4_MS=24*3600*1000, P4_EK='b7t4e',P4_UK='b7t4u';
+let timerIv=null;
+function getExp(k){const v=localStorage.getItem(k);return v?parseInt(v):null;}
+function isAlive(k){const e=getExp(k);return !!e&&Date.now()<e;}
+function isUsed(k){return localStorage.getItem(k)==='1';}
+
+function startTimer(ek){
+  const bar=document.getElementById('timerBar'),txt=document.getElementById('timerTxt');
+  bar.style.display='flex';
+  if(timerIv)clearInterval(timerIv);
+  function tick(){
+    const exp=getExp(ek);if(!exp){clearInterval(timerIv);bar.style.display='none';return;}
+    const left=Math.max(0,exp-Date.now());
+    const h=Math.floor(left/3600000),m=Math.floor((left%3600000)/60000),s=Math.floor((left%60000)/1000);
+    txt.textContent=h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    bar.className=left<=60000?'danger':left<=300000?'warn':'';
+    if(left<=0){
+      clearInterval(timerIv);bar.style.display='none';localStorage.removeItem(ek);
+      document.getElementById('mainWrap').style.display='none';
+      openModal('lockOverlay');
+      document.getElementById('pwArea').style.display='flex';
+      document.getElementById('lockDesc').textContent='⏰ 限時使用已到期';
+      document.getElementById('pwErr').textContent='請輸入正式密碼繼續使用';
+      document.getElementById('pwInput').value='';
+    }
+  }
+  tick();timerIv=setInterval(tick,1000);
+}
+
+/* ════════════════════════════════════════
+   資料儲存
+════════════════════════════════════════ */
+const SK='b7h',WK='b7w',PLK='b7p',BK='b7b';
+let history=[],predLog=[];
+
+/* ══ 貝葉斯權重系統 ══
+   每個模型維護一個 Beta 分布 (alpha, beta)
+   alpha = 預測正確次數 + 1（先驗）
+   beta  = 預測錯誤次數 + 1（先驗）
+   期望命中率 = alpha / (alpha + beta)
+   使用期望命中率作為加權
+*/
+let BW = {
+  ma: {a:2, b:2},  // 一階馬可夫
+  mb: {a:2, b:2},  // 二階馬可夫
+  mc: {a:2, b:2},  // 多階序列
+  md: {a:2, b:2},  // 長龍動態
+  mg: {a:2, b:2},  // 熱區掃描
+  mx: {a:2, b:2},  // 反轉信號模型（新）
+};
+
+function bayesExpected(m){ return m.a / (m.a + m.b); }
+function bayesUpdate(key, correct){
+  if(!BW[key]) return;
+  if(correct) BW[key].a += 1;
+  else        BW[key].b += 1;
+  // 衰減：避免舊資料主導，每次更新後稍微向先驗拉回
+  const decay = 0.98;
+  BW[key].a = BW[key].a * decay + (1 - decay) * 2;
+  BW[key].b = BW[key].b * decay + (1 - decay) * 2;
+}
+
+function loadAll(){
+  try{const h=localStorage.getItem(SK);if(h)history=JSON.parse(h);}catch(e){}
+  try{const w=localStorage.getItem(WK);if(w)BW=JSON.parse(w);}catch(e){}
+  try{const p=localStorage.getItem(PLK);if(p)predLog=JSON.parse(p);}catch(e){}
+}
+const saveH=()=>localStorage.setItem(SK,JSON.stringify(history));
+const saveW=()=>localStorage.setItem(WK,JSON.stringify(BW));
+const saveP=()=>localStorage.setItem(PLK,JSON.stringify(predLog));
+
+/* ════════════════════════════════════════
+   5 個精選模型 + 1 個新模型
+════════════════════════════════════════ */
+
+// M-A：一階馬可夫
+function mA(){
+  const st=['B','P','T'],mat=st.map(()=>st.map(()=>0));
+  for(let i=1;i<history.length;i++)mat[st.indexOf(history[i-1].winner)][st.indexOf(history[i].winner)]++;
+  const li=st.indexOf(history[history.length-1].winner),tot=mat[li].reduce((a,b)=>a+b,0)||1;
+  return{B:mat[li][0]/tot*100,P:mat[li][1]/tot*100};
+}
+
+// M-B：二階馬可夫
+function mB(){
+  if(history.length<3)return{B:50,P:50};
+  const cnt={};
+  for(let i=2;i<history.length;i++){
+    const k=history[i-2].winner+history[i-1].winner;
+    if(!cnt[k])cnt[k]={B:0,P:0,T:0};
+    cnt[k][history[i].winner]++;
+  }
+  const k2=history[history.length-2].winner+history[history.length-1].winner;
+  const c=cnt[k2]||{B:1,P:1,T:0},tot=c.B+c.P+c.T||1;
+  return{B:c.B/tot*100,P:c.P/tot*100};
+}
+
+// M-C：多階序列比對（3~15筆）
+function mC(){
+  let pred={B:0,P:0};
+  const maxLen=Math.min(15,history.length-1);
+  for(let len=3;len<=maxLen;len++){
+    const ls=JSON.stringify(history.slice(-len).map(h=>h.winner));
+    for(let i=0;i<=history.length-len-1;i++){
+      if(JSON.stringify(history.slice(i,i+len).map(h=>h.winner))===ls){
+        const n=history[i+len].winner;
+        if(n==='B'||n==='P') pred[n]+=1/len;
+      }
+    }
+  }
+  const tot=pred.B+pred.P||1;
+  return{B:pred.B/tot*100,P:pred.P/tot*100};
+}
+
+// M-D：長龍動態分析
+function mD(){
+  const nonT=history.filter(h=>h.winner!=='T');
+  if(nonT.length<2)return{B:50,P:50};
+  let n=1,dir=nonT[nonT.length-1].winner;
+  for(let i=nonT.length-2;i>=0;i--){if(nonT[i].winner===dir)n++;else break;}
+  // 根據連龍長度動態調整跟龍/打龍的機率
+  let fp=n<=2?.42:n===3?.48:n===4?.53:n===5?.56:Math.min(.61,.56+(n-5)*.01);
+  return dir==='B'?{B:fp*100,P:(1-fp)*100}:{B:(1-fp)*100,P:fp*100};
+}
+
+// M-G：熱區掃描（近20局）
+function mG(){
+  const win=history.slice(-20);
+  if(win.length<6)return{B:50,P:50};
+  let votes={B:0,P:0};
+  for(let len=2;len<=4;len++){
+    const pat=JSON.stringify(win.slice(-len).map(h=>h.winner));
+    let freq=0,bV=0,pV=0;
+    for(let i=0;i<=win.length-len-1;i++){
+      if(JSON.stringify(win.slice(i,i+len).map(h=>h.winner))===pat){
+        freq++;const nx=win[i+len].winner;
+        if(nx==='B')bV++;if(nx==='P')pV++;
+      }
+    }
+    if(freq>=2){votes.B+=bV*freq*len;votes.P+=pV*freq*len;}
+  }
+  const tot=votes.B+votes.P||1;
+  return{B:votes.B/tot*100,P:votes.P/tot*100};
+}
+
+// M-X：反轉信號模型（新）
+// 分析近期預測連錯次數，自動偵測是否需要反轉方向
+function mX(){
+  if(predLog.length<10)return{B:50,P:50};
+  const recent=predLog.filter(p=>p.actual!==null&&(p.actual==='B'||p.actual==='P')).slice(-10);
+  if(recent.length<5)return{B:50,P:50};
+  const correctRate=recent.filter(p=>p.correct).length/recent.length;
+  // 近期命中率低於40%，給出反向信號加強
+  if(correctRate<0.40){
+    // 基於最後一個預測反轉
+    const lastPred=recent[recent.length-1].pred;
+    return lastPred==='B'?{B:35,P:65}:{B:65,P:35};
+  }
+  return{B:50,P:50};
+}
+
+const MODELS=[
+  {fn:mA, key:'ma'},
+  {fn:mB, key:'mb'},
+  {fn:mC, key:'mc'},
+  {fn:mD, key:'md'},
+  {fn:mG, key:'mg'},
+  {fn:mX, key:'mx'},
+];
+
+/* ════════════════════════════════════════
+   貝葉斯學習
+════════════════════════════════════════ */
+function learn(actual){
+  if(!predLog.length)return;
+  const last=predLog[predLog.length-1];
+  if(last.actual!==null)return;
+  last.actual=actual;
+  last.correct=(last.pred===actual);
+  last.index=history.length-1;
+  // 更新每個模型的貝葉斯權重
+  MODELS.forEach((m,i)=>{
+    const vote=last.votes[i];
+    if(!vote)return;
+    bayesUpdate(m.key, vote===actual);
+  });
+  saveW();saveP();
+}
+
+/* ════════════════════════════════════════
+   反轉模式
+════════════════════════════════════════ */
+let reverseMode=false;
+function toggleReverse(){
+  reverseMode=!reverseMode;
+  const btn=document.getElementById('reverseBtn');
+  if(reverseMode){
+    btn.textContent='🔄 反向';btn.style.background='#2a1a0a';
+    btn.style.color='#f59e0b';btn.style.borderColor='#f59e0b55';
+  } else {
+    btn.textContent='🔄 正向';btn.style.background='#1e2d45';
+    btn.style.color='#7a9cc8';btn.style.borderColor='#2a3d5a';
+  }
+  showPrediction();
+}
+
+/* ════════════════════════════════════════
+   UI 更新函式
+════════════════════════════════════════ */
+function updateStats(){
+  document.getElementById('stB').textContent=history.filter(h=>h.winner==='B').length;
+  document.getElementById('stP').textContent=history.filter(h=>h.winner==='P').length;
+  document.getElementById('stT').textContent=history.filter(h=>h.winner==='T').length;
+}
+
+function updateHistory(){
+  const el=document.getElementById('historyBox');el.innerHTML='';
+  if(!history.length){el.innerHTML='<span style="color:var(--muted)">尚無記錄</span>';return;}
+  history.slice(-50).forEach((h,i)=>{
+    const idx=history.length-50+i;
+    const col=h.winner==='B'?'var(--red)':h.winner==='P'?'var(--blue)':'var(--green)';
+    const lbl=h.winner==='B'?'莊':h.winner==='P'?'閒':'和';
+    const log=predLog.find(p=>p.index===idx);
+    const badge=log&&log.actual!==null?(log.correct?'<span style="color:#4ade80;font-size:.6rem">✓</span>':'<span style="color:#f87171;font-size:.6rem">✗</span>'):'';
+    const sp=document.createElement('span');
+    sp.innerHTML=`<span style="color:var(--muted)">${idx+1}.</span><span style="color:${col}">${lbl}</span>${badge} `;
+    el.appendChild(sp);
+  });
+  el.scrollTop=el.scrollHeight;
+}
+
+function drawRoad(){
+  const canvas=document.getElementById('roadCanvas');
+  const wrap=document.getElementById('roadWrap');
+  const Wpx=wrap.clientWidth,Hpx=185;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.floor(Wpx*dpr);canvas.height=Math.floor(Hpx*dpr);
+  canvas.style.width=Wpx+'px';canvas.style.height=Hpx+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0d1526';ctx.fillRect(0,0,Wpx,Hpx);
+  const cell=Math.floor(Math.min(Hpx/6,Wpx/12));if(cell<5)return;
+  const maxRows=Math.floor(Hpx/cell),maxCols=Math.floor(Wpx/cell);
+  let cols=[],cur=[];
+  history.forEach(h=>{
+    if(h.winner==='T'){if(cur.length)cur[cur.length-1].tie=(cur[cur.length-1].tie||0)+1;return;}
+    if(cur.length&&cur[cur.length-1].winner===h.winner&&cur.length<maxRows)cur.push({winner:h.winner,tie:0});
+    else{if(cur.length)cols.push(cur);cur=[{winner:h.winner,tie:0}];}
+  });
+  if(cur.length)cols.push(cur);
+  const startCol=Math.max(0,cols.length-maxCols);
+  cols.slice(startCol).forEach((col,ci)=>{
+    col.forEach((bead,ri)=>{
+      const x=ci*cell,y=ri*cell,r=cell/2-2,cx=x+cell/2,cy=y+cell/2;
+      ctx.shadowColor=bead.winner==='B'?'#e03030':'#2b72e8';ctx.shadowBlur=5;
+      ctx.fillStyle=bead.winner==='B'?'#e03030':'#2b72e8';
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.strokeStyle=bead.winner==='B'?'#ff6666':'#60a5fa';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='white';ctx.font=`bold ${Math.max(9,Math.floor(cell*.36))}px sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(bead.winner==='B'?'莊':'閒',cx,cy);
+      if(bead.tie>0){ctx.fillStyle='#22c55e';ctx.font=`bold ${Math.max(7,Math.floor(cell*.25))}px sans-serif`;ctx.fillText(bead.tie>1?String(bead.tie):'和',cx,cy+r+4);}
+    });
+  });
+}
+
+/* ════════════════════════════════════════
+   主預測（貝葉斯加權融合）
+════════════════════════════════════════ */
+function showPrediction(){
+  const wb=document.getElementById('waitBox'),rb=document.getElementById('resultBox');
+  if(history.length<20){
+    wb.style.display='block';rb.style.display='none';
+    document.getElementById('waitNum').textContent=history.length;
+    document.getElementById('progFill').style.width=(history.length/20*100)+'%';
+    document.getElementById('hdrCount').textContent='';document.getElementById('hdrStreak').textContent='';return;
+  }
+  wb.style.display='none';rb.style.display='flex';
+
+  // 計算各模型結果
+  const results=MODELS.map(m=>m.fn());
+  const votes=results.map(r=>r.B>=r.P?'B':'P');
+
+  // 貝葉斯加權融合
+  let wTot=0,sB=0,sP=0;
+  results.forEach((r,i)=>{
+    const w=bayesExpected(BW[MODELS[i].key]);
+    wTot+=w;sB+=r.B*w;sP+=r.P*w;
+  });
+  const tot=sB+sP;
+  let pB=sB/tot*100,pP=sP/tot*100;
+
+  // 計算貝葉斯整體信心度（各模型期望值的加權標準差越低=信心越高）
+  const meanW=wTot/MODELS.length;
+  const variance=MODELS.reduce((s,m)=>s+Math.pow(bayesExpected(BW[m.key])-meanW,2),0)/MODELS.length;
+  const bayesConf=Math.max(50,Math.min(95,50+Math.max(pB,pP)-50+(1-Math.sqrt(variance))*10));
+
+  // 反轉模式
+  if(reverseMode){const tmp=pB;pB=pP;pP=tmp;}
+
+  const pred=pB>=pP?'B':'P',conf=Math.max(pB,pP);
+  predLog.push({pred,actual:null,votes,index:null,reversed:reverseMode});saveP();
+
+  const judged=predLog.filter(p=>p.actual!==null&&(p.actual==='B'||p.actual==='P'));
+  const hits=judged.filter(p=>p.correct).length;
+  const acc=judged.length>0?(hits/judged.length*100).toFixed(1):'--';
+  const nonT=history.filter(h=>h.winner!=='T');let streak=0,streakDir='';
+  if(nonT.length){streakDir=nonT[nonT.length-1].winner;streak=1;for(let i=nonT.length-2;i>=0;i--){if(nonT[i].winner===streakDir)streak++;else break;}}
+
+  const lbl=document.getElementById('predLabel');
+  lbl.textContent=pred==='B'?'🟥 莊':'🟦 閒';lbl.className=pred==='B'?'bk':'pl';
+  document.getElementById('barB').style.width=pB+'%';
+  document.getElementById('barP').style.width=pP+'%';
+  document.getElementById('pctB').textContent=pB.toFixed(1)+'%';
+  document.getElementById('pctP').textContent=pP.toFixed(1)+'%';
+  document.getElementById('bayesFill').style.width=bayesConf+'%';
+
+  const rp=document.getElementById('riskPill');
+  if(conf<54){rp.className='risk-pill rh';rp.textContent='⚠ 高風險・停手';}
+  else if(conf<58){rp.className='risk-pill rm';rp.textContent='● 中風險・小試';}
+  else{rp.className='risk-pill rl';rp.textContent='✦ 低風險・可跟';}
+
+  document.getElementById('accVal').textContent=acc==='--'?'--%':acc+'%';
+  document.getElementById('hitVal').textContent=hits;
+  document.getElementById('totVal').textContent=judged.length;
+  document.getElementById('hitRow').innerHTML=judged.slice(-10).map(p=>`<div class="hdot ${p.correct?'hy':'hn'}">${p.correct?'✓':'✗'}</div>`).join('');
+  document.getElementById('hdrStreak').textContent=streak>0?`連${streakDir==='B'?'莊':'閒'} ${streak}局`:'';
+  document.getElementById('hdrCount').textContent=judged.length>0?`命中率 ${acc}%`:'';
+}
+
+function updateAll(){updateStats();updateHistory();drawRoad();showPrediction();}
+function addHand(w){if(w!=='T')learn(w);history.push({winner:w});saveH();updateAll();}
+function undoLast(){if(!history.length)return;history.pop();if(predLog.length&&predLog[predLog.length-1].actual===null)predLog.pop();saveH();saveP();updateAll();}
+function clearAll(){openModal('confirmOverlay');}
+
+function doUnlock(){
+  document.getElementById('lockOverlay').style.display='none';
+  document.getElementById('mainWrap').style.display='block';
+  document.getElementById('lockDesc').textContent='請輸入密碼以解鎖使用';
+  document.getElementById('pwErr').textContent='';
+  loadAll();updateAll();
+}
+
+/* ════════════════════════════════════════
+   歷史視窗
+════════════════════════════════════════ */
+function showHistoryModal(){
+  if(!history.length){alert('尚無歷史記錄');return;}
+  openModal('historyOverlay');
+
+  const b=history.filter(h=>h.winner==='B').length;
+  const p=history.filter(h=>h.winner==='P').length;
+  const t=history.filter(h=>h.winner==='T').length;
+  const total=history.length;
+  const judged=predLog.filter(x=>x.actual!==null&&(x.actual==='B'||x.actual==='P'));
+  const acc=judged.length>0?(judged.filter(x=>x.correct).length/judged.length*100).toFixed(1):'--';
+
+  // 最長連龍
+  const nonT=history.filter(h=>h.winner!=='T');
+  let maxS=1,curS=1,maxD='';
+  for(let i=1;i<nonT.length;i++){
+    if(nonT[i].winner===nonT[i-1].winner){curS++;}
+    else{if(curS>maxS){maxS=curS;maxD=nonT[i-1].winner;}curS=1;}
+  }
+  if(curS>maxS){maxS=curS;maxD=nonT[nonT.length-1]?.winner||'';}
+
+  // 連龍分布
+  let streaks={B:[],P:[]},cs=1;
+  for(let i=1;i<nonT.length;i++){
+    if(nonT[i].winner===nonT[i-1].winner)cs++;
+    else{if(nonT[i-1].winner!=='T')streaks[nonT[i-1].winner]?.push(cs);cs=1;}
+  }
+  const avgStreakB=streaks.B.length?(streaks.B.reduce((a,b)=>a+b,0)/streaks.B.length).toFixed(1):'--';
+  const avgStreakP=streaks.P.length?(streaks.P.reduce((a,b)=>a+b,0)/streaks.P.length).toFixed(1):'--';
+
+  document.getElementById('histModalStats').innerHTML=
+    `<div class="ms-box"><div class="ms-val" style="color:#e03030">${b}</div><div class="ms-key">莊 ${(b/total*100).toFixed(0)}%</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#2b72e8">${p}</div><div class="ms-key">閒 ${(p/total*100).toFixed(0)}%</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#18a84a">${t}</div><div class="ms-key">和 ${(t/total*100).toFixed(0)}%</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#f5c518">${total}</div><div class="ms-key">總局數</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#f5c518">${acc}%</div><div class="ms-key">命中率</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#a78bfa">${maxS}${maxD?'連'+(maxD==='B'?'莊':'閒'):''}</div><div class="ms-key">最長連龍</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#e03030;font-size:.85rem">${avgStreakB}</div><div class="ms-key">莊平均連龍</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#2b72e8;font-size:.85rem">${avgStreakP}</div><div class="ms-key">閒平均連龍</div></div>
+     <div class="ms-box"><div class="ms-val" style="color:#60a5fa;font-size:.85rem">${judged.length}</div><div class="ms-key">有效預測</div></div>`;
+
+  let html='<div style="color:var(--muted);font-size:.68rem;margin-bottom:8px;">每行10筆，✓=預測正確 ✗=預測錯誤</div>';
+  for(let i=0;i<history.length;i++){
+    const h=history[i];
+    const col=h.winner==='B'?'#e03030':h.winner==='P'?'#2b72e8':'#18a84a';
+    const lbl=h.winner==='B'?'莊':h.winner==='P'?'閒':'和';
+    const log=predLog.find(x=>x.index===i);
+    const badge=log&&log.actual!==null?(log.correct?'<span style="color:#4ade80">✓</span>':'<span style="color:#f87171">✗</span>'):'';
+    if(i%10===0)html+=`<div style="color:#5a6a85;font-size:.62rem;margin-top:8px;margin-bottom:2px;">${i+1}～${Math.min(i+10,history.length)}</div>`;
+    html+=`<span style="color:${col};margin-right:2px;">${lbl}</span>${badge}`;
+    if((i+1)%10===0)html+='<br>';
+  }
+  document.getElementById('histModalList').innerHTML=html;
+}
+
+/* ════════════════════════════════════════
+   匯出 / 導入
+════════════════════════════════════════ */
+function exportText(){
+  if(!history.length){alert('尚無記錄');return;}
+  const b=history.filter(h=>h.winner==='B').length;
+  const p=history.filter(h=>h.winner==='P').length;
+  const t=history.filter(h=>h.winner==='T').length;
+  let txt='百家樂歷史記錄 V7\n';
+  txt+='總局數：'+history.length+' | 莊：'+b+' | 閒：'+p+' | 和：'+t+'\n\n';
+  for(let i=0;i<history.length;i++){
+    const lbl=history[i].winner==='B'?'莊':history[i].winner==='P'?'閒':'和';
+    txt+=(i+1)+'.'+lbl+' ';
+    if((i+1)%20===0)txt+='\n';
+  }
+  txt+='\n\n序列：'+history.map(h=>h.winner).join('');
+  copyText(txt,'文字已複製');
+}
+
+function exportCSV(){
+  if(!history.length){alert('尚無記錄');return;}
+  let csv='序號,結果,預測,命中\n';
+  history.forEach((h,i)=>{
+    const lbl=h.winner==='B'?'莊':h.winner==='P'?'閒':'和';
+    const log=predLog.find(x=>x.index===i);
+    const pred=log?(log.pred==='B'?'莊':'閒'):'--';
+    const correct=log&&log.actual!==null?(log.correct?'✓':'✗'):'--';
+    csv+=(i+1)+','+lbl+','+pred+','+correct+'\n';
+  });
+  copyText(csv,'CSV 已複製');
+}
+
+function exportJSON(){
+  if(!history.length){alert('尚無記錄');return;}
+  const data={
+    version:7,
+    exportTime:new Date().toISOString(),
+    history:history,
+    bayesWeights:BW
+  };
+  copyText(JSON.stringify(data,null,2),'JSON 已複製（可用於導入）');
+}
+
+function openModal(id){
+  const el=document.getElementById(id);
+  el.style.display='flex';
+}
+function closeModal(id){
+  document.getElementById(id).style.display='none';
+}
+
+function doImport(){
+  const raw=document.getElementById('importTextarea').value.trim();
+  if(!raw){alert('請貼上資料');return;}
+  try{
+    let data=JSON.parse(raw);
+    // 支援兩種格式：純陣列 或 JSON物件
+    let newHistory=Array.isArray(data)?data:(data.history||[]);
+    let newBW=data.bayesWeights||null;
+    if(!newHistory.length){alert('資料格式錯誤或無記錄');return;}
+    // 合併（避免重複）
+    const existing=new Set(history.map(h=>h.winner+h.index));
+    newHistory.forEach(h=>{
+      if(h.winner==='B'||h.winner==='P'||h.winner==='T')history.push({winner:h.winner});
+    });
+    if(newBW) BW=newBW;
+    saveH();saveW();
+    closeModal('importOverlay');
+    closeModal('historyOverlay');
+    updateAll();
+    alert('成功導入 '+newHistory.length+' 筆資料！');
+  }catch(e){
+    alert('格式錯誤，請確認貼上的是正確的 JSON 資料');
+  }
+}
+
+function copyText(text,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>alert(msg||'已複製')).catch(()=>fallbackCopy(text,msg));
+  }else{fallbackCopy(text,msg);}
+}
+function fallbackCopy(text,msg){
+  const el=document.createElement('textarea');
+  el.value=text;el.style.position='fixed';el.style.opacity='0';
+  document.body.appendChild(el);el.select();
+  try{document.execCommand('copy');alert(msg||'已複製');}catch(e){alert('請手動複製：\n\n'+text.slice(0,200)+'...');}
+  document.body.removeChild(el);
+}
+
+/* ════════════════════════════════════════
+   DOMContentLoaded
+════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  window.addEventListener('resize',drawRoad);
+
+  document.getElementById('unlockBtn').addEventListener('click',()=>{
+    document.getElementById('pwArea').style.display='flex';
+    setTimeout(()=>document.getElementById('pwInput').focus(),100);
+  });
+
+  function tryUnlock(){
+    const v=document.getElementById('pwInput').value.trim();
+    const err=document.getElementById('pwErr');
+    if(v===P1||v===P2){
+      if(timerIv)clearInterval(timerIv);
+      localStorage.removeItem(P3_EK);localStorage.removeItem(P4_EK);
+      document.getElementById('timerBar').style.display='none';
+      doUnlock();return;
+    }
+    if(v===P3){
+      if(isUsed(P3_UK)){err.textContent='🚫 此密碼已使用過。';document.getElementById('pwInput').value='';return;}
+      localStorage.setItem(P3_UK,'1');localStorage.setItem(P3_EK,String(Date.now()+P3_MS));
+      doUnlock();startTimer(P3_EK);return;
+    }
+    if(v===P4){
+      if(isUsed(P4_UK)){err.textContent='🚫 此密碼已使用過。';document.getElementById('pwInput').value='';return;}
+      localStorage.setItem(P4_UK,'1');localStorage.setItem(P4_EK,String(Date.now()+P4_MS));
+      doUnlock();startTimer(P4_EK);return;
+    }
+    err.textContent='❌ 密碼錯誤';document.getElementById('pwInput').value='';
+  }
+  document.getElementById('pwOkBtn').addEventListener('click',tryUnlock);
+  document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
+
+  document.getElementById('confirmNo').addEventListener('click',()=>closeModal('confirmOverlay'));
+  document.getElementById('confirmYes').addEventListener('click',()=>{
+    closeModal('confirmOverlay');
+    history=[];predLog=[];
+    BW={ma:{a:2,b:2},mb:{a:2,b:2},mc:{a:2,b:2},md:{a:2,b:2},mg:{a:2,b:2},mx:{a:2,b:2}};
+    saveH();saveW();saveP();updateAll();
+  });
+
+  document.getElementById('btnB').addEventListener('click',()=>addHand('B'));
+  document.getElementById('btnP').addEventListener('click',()=>addHand('P'));
+  document.getElementById('btnT').addEventListener('click',()=>addHand('T'));
+  document.getElementById('btnUndo').addEventListener('click',undoLast);
+  document.getElementById('btnClear').addEventListener('click',clearAll);
+
+  if(isAlive(P3_EK)){doUnlock();startTimer(P3_EK);}
+  else if(isAlive(P4_EK)){doUnlock();startTimer(P4_EK);}
+  else if(getExp(P3_EK)){localStorage.removeItem(P3_EK);document.getElementById('pwArea').style.display='flex';document.getElementById('lockDesc').textContent='⏰ 限時使用已到期';document.getElementById('pwErr').textContent='請輸入正式密碼繼續使用';}
+  else if(getExp(P4_EK)){localStorage.removeItem(P4_EK);document.getElementById('pwArea').style.display='flex';document.getElementById('lockDesc').textContent='⏰ 限時使用已到期';document.getElementById('pwErr').textContent='請輸入正式密碼繼續使用';}
+
+  loadAll();
+});
+</script>
+
+</body>
+</html>
