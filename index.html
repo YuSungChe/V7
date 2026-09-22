@@ -103,9 +103,9 @@ border-radius:6px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:point
 .rm{background:rgba(251,191,36,.1);color:#fbbf24 !important;border:1px solid rgba(251,191,36,.3);}
 .rl{background:rgba(34,197,94,.1);color:#4ade80 !important;border:1px solid rgba(34,197,94,.3);}
 
-/* 貝葉斯信心度（只有一條進度條） */
-#bayesBar{margin-top:14px;padding-top:10px;border-top:1px solid var(--border);}
-.bayes-label{font-size:.65rem;color:var(--muted) !important;margin-bottom:6px;}
+/* 貝葉斯信心度 - 已加大間距往下移 */
+#bayesBar{margin-top:24px;padding-top:12px;border-top:1px solid var(--border);}
+.bayes-label{font-size:.65rem;color:var(--muted) !important;margin-bottom:8px;}
 .bayes-track{background:#0d1526;border-radius:4px;height:6px;overflow:hidden;border:1px solid var(--border);}
 .bayes-fill{height:100%;border-radius:4px;transition:width .5s;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
 
@@ -287,7 +287,7 @@ color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;
             <span class="prob-pct" id="pctP" style="color:var(--blue)">50%</span>
           </div>
           <span class="risk-pill" id="riskPill"></span>
-          <!-- 只有一條進度條 -->
+          <!-- 貝葉斯信心度（只有一條，已往下移） -->
           <div id="bayesBar">
             <div class="bayes-label">貝葉斯信心度</div>
             <div class="bayes-track">
@@ -310,7 +310,7 @@ color:#dde4f0 !important;font-size:.75rem;padding:10px;resize:none;outline:none;
 (function(){
   if(!('serviceWorker' in navigator))return;
   navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));
-  const c=`const V='b7v3';self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll([location.href])).then(()=>self.skipWaiting()));});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(location.href))));});`;
+  const c=`const V='b7v4';self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll([location.href])).then(()=>self.skipWaiting()));});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(location.href))));});`;
   try{
     navigator.serviceWorker.register(URL.createObjectURL(new Blob([c],{type:'application/javascript'})))
       .then(()=>{const b=document.getElementById('netBadge');b.textContent='● 離線就緒';b.style.color='#4ade80';})
@@ -573,7 +573,7 @@ function showPrediction(){
   document.getElementById('pctB').textContent=pB.toFixed(1)+'%';
   document.getElementById('pctP').textContent=pP.toFixed(1)+'%';
 
-  // 只更新一條進度條 + 左側大數字
+  // 更新信心度（只有一條進度條 + 左側大數字）
   document.getElementById('bayesFill').style.width=bayesConf+'%';
   document.getElementById('bayesConfBig').textContent=bayesConf.toFixed(1)+'%';
 
@@ -718,3 +718,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
+  
